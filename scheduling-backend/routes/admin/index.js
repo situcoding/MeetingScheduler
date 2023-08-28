@@ -1,26 +1,46 @@
+/* routes/admin/index.js */
+
 import express from 'express';
-import { registerAdminUser, getAllAdminUsers, loginUser } from '../../controllers/admin.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import AdminUser from '../../models/AdminUser.js';
+import LoginLog from '../../models/LoginLog.js';
+
+const SECRET_KEY = 'your-2d2d9154cfa511986f9c21c596789329db50411269a695d66a65ca64940c64be'; /* Replace with your actual secret key */
 
 const router = express.Router();
 
-/* Route for registering a new admin user */
-router.post('/register', (req, res) => {
-    console.log("Entered POST /admin/register");
-    registerAdminUser(req, res); // Use registerAdminUser
+router.post('/admin-login', async (req, res) => {
+    try {
+        const { admin_username, password } = req.body;
+        const admin = await AdminUser.findOne({ where: { admin_username } });
+
+        if (!admin || !bcrypt.compareSync(password, admin.password)) {
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+
+        /* Add other necessary data to the token payload if needed */
+        const tokenPayload = {
+            admin_username: admin.admin_username,
+            role: admin.role,
+        };
+
+        await LoginLog.create({
+            admin_username: admin.admin_username,
+            loginTimestamp: new Date(),
+            role: admin.role,
+            ip_address: req.ip,                    /* Capture IP address */
+            user_agent: req.get('User-Agent'),     /* Capture User-Agent header */
+            status: 'successful',     
+        });
+
+        const token = jwt.sign(tokenPayload, SECRET_KEY);
+
+        res.status(200).json({ message: 'Admin login successful', token });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
-/* Route for retrieving all admin users */
-router.get('/all', (req, res) => {
-    console.log("Entered GET /admin/all");
-    getAllAdminUsers(req, res); /* Use getAllAdminUsers */
-});
-
-/* Route for logging in an admin user */
-router.post('/login', (req, res) => {
-    console.log("Entered POST /admin/login");
-    loginUser(req, res); // Use loginUser
-});
-
-/* ... Other admin-related routes ...*/
 
 export default router;

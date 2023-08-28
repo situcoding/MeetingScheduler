@@ -1,4 +1,5 @@
 /* authentication/authMiddleware.js */
+
 import jwt from 'jsonwebtoken';
 
 const SECRET_KEY = '2d2d9154cfa511986f9c21c596789329db50411269a695d66a65ca64940c64be'; 
@@ -15,33 +16,41 @@ export function authenticateToken(req, res, next) {
       return res.status(403).json({ message: 'Forbidden' });
     }
 
-    req.userId = user.userId;
-    req.role = user.role;
-
+    if (user.role === 'admin_user' || user.role === 'admin_master') {
+      req.admin_username = user.admin_username;
+      req.role = user.role;  /* Roles can be 'admin_user' or 'admin_master' for admins */
+    } else if (user.role === 'client') {
+      req.client_username = user.client_username;
+      req.role = 'client';  /* Roles are always 'client' for client users */
+    }
+    
     next();
   });
 }
 
-/* authMiddleware.js */
-import { LoginLog } from '../models/Login_logs.js'; // Import the correct model for login logs
-
-export async function logAdminLogin(req, res, next) {
+export async function logUserLogin(req, res, next) {
   try {
-    /* Extract user information from the token or session */
-    const { userId, role } = req; // Use req.userId and req.role
+    let username, role;
 
-    /* Log the login information */
+    if (req.admin_username) {
+      username = req.admin_username;
+      role = req.role;
+    } else if (req.client_username) {
+      username = req.client_username;
+      role = 'client';  /* Default role for clients */
+    } else {
+      console.error('No username information available.');
+      return next();
+    }
+
     await LoginLog.create({
-      admin_user_id: userId, // Use userId from req
-      role: role, // Use role from req
-      // ...
+      username: username,
+      role: role
     });
 
     next();
   } catch (error) {
-    // Handle errors
     console.error('Error logging login:', error);
-    // Continue with the next middleware or route
     next();
   }
 }

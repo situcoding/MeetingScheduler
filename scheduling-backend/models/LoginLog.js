@@ -1,4 +1,6 @@
 /* models/Login_logs.js */
+   
+
 import { DataTypes } from 'sequelize'; 
 import sequelize from '../database.js';
 
@@ -8,20 +10,20 @@ const LoginLog = sequelize.define('LoginLog', {
         autoIncrement: true,
         primaryKey: true
     },
-    admin_user_id: {
-        type: DataTypes.INTEGER,
+    admin_username: {
+        type: DataTypes.STRING,
         references: {
             model: 'admin_users', /* Reference the admin_users table */
-            key: 'id'
+            key: 'admin_username' /* This should match the actual column name in the table */
         },
         onDelete: 'SET NULL',
         onUpdate: 'CASCADE'
     },
-    client_id: {
-        type: DataTypes.INTEGER,
+    client_username: {
+        type: DataTypes.STRING,
         references: {
-            model: 'clients', /* Reference the clients table */
-            key: 'id'
+            model: 'clients', /*/ Reference the clients table */
+            key: 'client_username' /* This should match the actual column name in the table */
         },
         onDelete: 'SET NULL',
         onUpdate: 'CASCADE'

@@ -1,7 +1,10 @@
+/* database.js */
+
+
 import { Sequelize } from 'sequelize';
 
 
-const sequelize = new Sequelize('SchedulingDB', 'root', '122418Jackie', {
+const sequelize = new Sequelize('schedulingDB', 'root', '122418Jackie', {
     host: 'localhost',
     dialect: 'mysql',
     logging: console.log
